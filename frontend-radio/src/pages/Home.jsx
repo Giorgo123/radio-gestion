@@ -1,11 +1,8 @@
-// frontend-radio/pages/Home.jsx
-import React from 'react';
-
 const Home = () => {
   return (
     <div>
-      <h1>Bienvenido al Panel de Gestión</h1>
-      <p>Usá la barra de navegación para acceder a Agencias, Clientes o Transacciones.</p>
+      <h1 className="text-2xl font-bold mb-4">Bienvenido a Radio Gestión 📻</h1>
+      <p>Seleccioná una opción en el menú para empezar.</p>
     </div>
   );
 };
