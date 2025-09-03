@@ -16,7 +16,6 @@ function App() {
   return (
     
     <Router>
-      <ToastContainer position="top-right" autoClose={3000} />
       <Routes>
         <Route element={<DashboardLayout />}>
           <Route path="/" element={<Home />} />
@@ -25,6 +24,7 @@ function App() {
           <Route path="/transactions" element={<Transactions />} />
         </Route>
       </Routes>
+      {/* <ToastContainer position="top-right" autoClose={3000} /> */}
     </Router>
     
   );
