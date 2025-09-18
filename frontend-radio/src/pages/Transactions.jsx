@@ -1,4 +1,3 @@
-// src/pages/Transactions.jsx
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_URL } from "../config";
@@ -31,35 +30,41 @@ export default function Transactions() {
   }, []);
 
   return (
-<div className="p-6 bg-gray-50 min-h-screen">
-  <h2 className="text-2xl font-bold mb-6 text-blue-600">Transacciones</h2>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <h2 className="text-2xl font-bold mb-6 text-blue-600">Transacciones</h2>
 
-  {/* Formulario siempre visible */}
-  <TransactionForm onSuccess={fetchData} clients={clients} />
+      <TransactionForm onSuccess={fetchData} clients={clients} />
 
-  {/* Secciones condicionales */}
-  {mostrarHistorial && (
-    <HistorialTransacciones
-      transactions={transactions}
-      clients={clients}
-      fetchData={fetchData}
-    />
-  )}
+      {mostrarHistorial && (
+        <div className="bg-white text-gray-800 shadow rounded p-4 mt-6">
+          <HistorialTransacciones
+            transactions={transactions}
+            clients={clients}
+            fetchData={fetchData}
+          />
+        </div>
+      )}
 
-  {mostrarReportes && (
-    <ReportesTransacciones transactions={transactions} />
-  )}
+      {mostrarReportes && (
+        <div className="bg-white text-gray-800 shadow rounded p-4 mt-6">
+          <ReportesTransacciones transactions={transactions} />
+        </div>
+      )}
 
-  {/* Botones SIEMPRE al final */}
-  <div className="flex gap-4 mt-6">
-    <Button onClick={() => setMostrarHistorial(!mostrarHistorial)}>
-      {mostrarHistorial ? "Ocultar Historial" : "Ver Historial"}
-    </Button>
-    <Button onClick={() => setMostrarReportes(!mostrarReportes)}>
-      {mostrarReportes ? "Ocultar Reportes" : "Ver Reportes"}
-    </Button>
-  </div>
-</div>
-
+      <div className="flex gap-4 mt-6">
+        <Button
+          variant="default"
+          onClick={() => setMostrarHistorial(!mostrarHistorial)}
+        >
+          {mostrarHistorial ? "Ocultar Historial" : "Ver Historial"}
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => setMostrarReportes(!mostrarReportes)}
+        >
+          {mostrarReportes ? "Ocultar Reportes" : "Ver Reportes"}
+        </Button>
+      </div>
+    </div>
   );
 }

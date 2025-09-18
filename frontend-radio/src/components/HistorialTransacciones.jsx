@@ -1,13 +1,13 @@
 import { useState } from "react";
 import axios from "axios";
 import { API_URL } from "../config";
+import { toast } from "react-toastify";
 
 export default function HistorialTransacciones({ transactions, clients, fetchData }) {
   const [clientFilter, setClientFilter] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
-  // Filtrar
   const filteredTxs = transactions.filter((tx) => {
     if (clientFilter && tx.client?._id !== clientFilter) return false;
 
@@ -18,7 +18,6 @@ export default function HistorialTransacciones({ transactions, clients, fetchDat
     return true;
   });
 
-  // Calcular totales
   let runningBalance = 0;
   let totalDebe = 0;
   let totalHaber = 0;
@@ -87,13 +86,13 @@ export default function HistorialTransacciones({ transactions, clients, fetchDat
 
       {/* Totales */}
       <div className="mb-6 space-x-6 text-lg font-semibold">
-        <span>Total Debe: ${totalDebe.toFixed(2)}</span>
-        <span>Total Haber: ${totalHaber.toFixed(2)}</span>
-        <span>Saldo Actual: ${runningBalance.toFixed(2)}</span>
+        <span>Total Debe: ${totalDebe.toLocaleString("es-AR")}</span>
+        <span>Total Haber: ${totalHaber.toLocaleString("es-AR")}</span>
+        <span>Saldo Actual: ${runningBalance.toLocaleString("es-AR")}</span>
       </div>
 
       {/* Tabla */}
-      <div className="overflow-auto mb-8">
+      <div className="overflow-x-auto mb-8">
         <table className="min-w-full bg-white shadow-md rounded-lg text-sm">
           <thead>
             <tr className="bg-blue-100 text-gray-700">
@@ -127,13 +126,13 @@ export default function HistorialTransacciones({ transactions, clients, fetchDat
                 <td className="px-3 py-2">{tx.receiptOrInvoice || "-"}</td>
                 <td className="px-3 py-2">{tx.promoter || "-"}</td>
                 <td className="px-3 py-2 text-red-600 text-right">
-                  {tx.debit ? `$${tx.debit.toFixed(2)}` : "-"}
+                  {tx.debit ? `$${tx.debit.toLocaleString("es-AR")}` : "-"}
                 </td>
                 <td className="px-3 py-2 text-green-600 text-right">
-                  {tx.credit ? `$${tx.credit.toFixed(2)}` : "-"}
+                  {tx.credit ? `$${tx.credit.toLocaleString("es-AR")}` : "-"}
                 </td>
                 <td className="px-3 py-2 font-semibold text-right">
-                  ${tx.runningBalance.toFixed(2)}
+                  ${tx.runningBalance.toLocaleString("es-AR")}
                 </td>
                 <td className="px-3 py-2 text-right">
                   <button
@@ -141,11 +140,14 @@ export default function HistorialTransacciones({ transactions, clients, fetchDat
                       if (window.confirm("¿Eliminar transacción?")) {
                         axios
                           .delete(`${API_URL}/transactions/${tx._id}`)
-                          .then(() => fetchData())
-                          .catch(() => alert("Error al eliminar"));
+                          .then(() => {
+                            toast.success("Transacción eliminada");
+                            fetchData();
+                          })
+                          .catch(() => toast.error("Error al eliminar"));
                       }
                     }}
-                    className="text-red-500 hover:text-red-700"
+                    className="text-red-600 hover:text-red-800"
                   >
                     Eliminar
                   </button>
