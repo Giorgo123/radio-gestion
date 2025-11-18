@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start:backend": "cd backend-radio && node index.js",
-    "start:frontend": "cd frontend-radio && npm start",
-    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\""
+    "dev:backend": "npm --prefix backend-radio run dev",
+    "dev:frontend": "npm --prefix frontend-radio start",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "prod:backend": "npm --prefix backend-radio start",
+    "prod:frontend": "npm --prefix frontend-radio run serve",
+    "prod": "concurrently \"npm run prod:backend\" \"npm run prod:frontend\""
   },
   "devDependencies": {
     "autoprefixer": "^10.4.21",

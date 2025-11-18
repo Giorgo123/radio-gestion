@@ -15,10 +15,10 @@ export default function Clients() {
   const [editId, setEditId] = useState(null);
 
   useEffect(() => {
-    fetchData();
+    loadClientsAndAgencies();
   }, []);
 
-  const fetchData = async () => {
+  const loadClientsAndAgencies = async () => {
     try {
       const [clientsRes, agenciesRes] = await Promise.all([
         axios.get(`${API_URL}/clients`),
@@ -28,6 +28,10 @@ export default function Clients() {
       setAgencies(agenciesRes.data);
     } catch (err) {
       console.error("Error cargando datos:", err);
+      const msg = !err.response
+        ? "No se pudo conectar con el backend. Verificá que esté corriendo y la variable REACT_APP_API_URL."
+        : err.response?.data?.message || "No se pudieron cargar los clientes";
+      toast.error(msg);
     }
   };
 
@@ -38,12 +42,17 @@ export default function Clients() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.name.trim()) {
+      toast.error("El nombre es obligatorio");
+      return;
+    }
     try {
+      const agencyValue = formData.agency ? formData.agency : null;
       const dataToSend = {
-        name: formData.name,
-        email: formData.email || null,
-        phone: formData.phone || null,
-        agency: formData.agency || undefined,
+        name: formData.name.trim(),
+        email: formData.email?.trim() || undefined,
+        phone: formData.phone?.trim() || undefined,
+        agency: agencyValue,
       };
 
       await axios[editId ? "put" : "post"](
@@ -54,7 +63,7 @@ export default function Clients() {
 
       setFormData({ name: "", agency: "", email: "", phone: "" });
       setEditId(null);
-      fetchData();
+      loadClientsAndAgencies();
       toast.success(editId ? "Cliente actualizado" : "Cliente creado");
     } catch (err) {
       console.error("Error:", err.response?.data || err.message);
@@ -76,10 +85,11 @@ export default function Clients() {
     if (window.confirm("Eliminar cliente?")) {
       try {
         await axios.delete(`${API_URL}/clients/${id}`);
-        fetchData();
+        loadClientsAndAgencies();
         toast.success("Cliente eliminado");
-      } catch {
-        toast.error("Error al eliminar cliente");
+      } catch (err) {
+        console.error("Error al eliminar cliente:", err);
+        toast.error(err.response?.data?.message || "Error al eliminar cliente");
       }
     }
   };

@@ -1,0 +1,8 @@
+node_modules/
+backend-radio/node_modules/
+frontend-radio/node_modules/
+.env
+.env.*
+coverage/
+.DS_Store
+npm-debug.log*

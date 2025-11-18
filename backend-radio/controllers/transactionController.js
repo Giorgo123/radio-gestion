@@ -1,13 +1,17 @@
+const mongoose = require('mongoose');
 const Transaction = require('../models/Transaction');
 const Client = require('../models/Client');
 
 // GET /api/transactions
 const getTransactions = async (req, res) => {
   try {
-    const txs = await Transaction.find().populate('client', 'name');
-    res.json(txs);
+    const transactions = await Transaction.find()
+      .sort({ date: -1 })
+      .populate('client', 'name balance');
+    res.json(transactions);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error('Error al obtener transacciones:', err);
+    res.status(500).json({ message: 'Error al obtener transacciones' });
   }
 };
 
@@ -25,42 +29,74 @@ const createTransaction = async (req, res) => {
       promoter
     } = req.body;
 
-    const cli = await Client.findById(client);
-    if (!cli) return res.status(404).json({ message: 'Cliente no encontrado' });
+    if (!mongoose.Types.ObjectId.isValid(client)) {
+      return res.status(400).json({ message: 'ID de cliente inválido' });
+    }
 
-    const lastTx = await Transaction.findOne({ client }).sort({ date: -1 });
-    const prevBalance = lastTx ? lastTx.balance : 0;
+    const clientRecord = await Client.findById(client);
+    if (!clientRecord) {
+      return res.status(404).json({ message: 'Cliente no encontrado' });
+    }
+
+    if (!['deuda', 'pago'].includes(type)) {
+      return res.status(400).json({ message: 'Tipo de transacción inválido' });
+    }
+
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      return res.status(400).json({ message: 'El monto debe ser un número positivo' });
+    }
+
+    const transactionDate = date ? new Date(date) : new Date();
+    if (Number.isNaN(transactionDate.getTime())) {
+      return res.status(400).json({ message: 'Fecha de transacción inválida' });
+    }
+
+    let dueDateValue;
+    if (dueDate) {
+      dueDateValue = new Date(dueDate);
+      if (Number.isNaN(dueDateValue.getTime())) {
+        return res.status(400).json({ message: 'Fecha de vencimiento inválida' });
+      }
+    }
+
+    const latestTransaction = await Transaction.findOne({ client }).sort({ createdAt: -1 });
+    const previousBalance = latestTransaction ? latestTransaction.balance : clientRecord.balance || 0;
 
     let debit = 0;
     let credit = 0;
 
-    if (type === 'deuda') debit = amount;
-    else if (type === 'pago') credit = amount;
-    else return res.status(400).json({ message: 'Tipo de transacción inválido' });
+    if (type === 'deuda') debit = numericAmount;
+    else credit = numericAmount;
 
-    const newBalance = prevBalance + debit - credit;
+    const updatedBalance = previousBalance + debit - credit;
+
+    const sanitizedOrderNumber = typeof orderNumber === 'string' ? orderNumber.trim() : '';
+    const sanitizedReceipt = typeof receiptOrInvoice === 'string' ? receiptOrInvoice.trim() : '';
+    const sanitizedPromoter = typeof promoter === 'string' ? promoter.trim() : '';
 
     const newTx = new Transaction({
       client,
       type,
-      date: date || new Date(),
-      dueDate,
-      orderNumber,
-      receiptOrInvoice,
-      promoter,
+      date: transactionDate,
+      dueDate: dueDateValue,
+      orderNumber: sanitizedOrderNumber || undefined,
+      receiptOrInvoice: sanitizedReceipt || undefined,
+      promoter: sanitizedPromoter || undefined,
       debit,
       credit,
-      balance: newBalance,
+      balance: updatedBalance,
     });
 
     await newTx.save();
 
-    cli.balance = newBalance;
-    await cli.save();
+    clientRecord.balance = updatedBalance;
+    await clientRecord.save();
 
     res.status(201).json(newTx);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    console.error('Error al crear transacción:', err);
+    res.status(500).json({ message: 'Error al crear transacción' });
   }
 };
 
@@ -70,20 +106,21 @@ const deleteTransaction = async (req, res) => {
     const tx = await Transaction.findById(req.params.id);
     if (!tx) return res.status(404).json({ message: 'Transacción no encontrada' });
 
-    const cli = await Client.findById(tx.client);
-    if (!cli) return res.status(404).json({ message: 'Cliente no encontrado' });
+    const clientRecord = await Client.findById(tx.client);
+    if (!clientRecord) return res.status(404).json({ message: 'Cliente no encontrado' });
 
     // Invertimos la operación para corregir el balance
-    cli.balance = tx.type === 'pago'
-      ? cli.balance + tx.credit
-      : cli.balance - tx.debit;
+    clientRecord.balance = tx.type === 'pago'
+      ? clientRecord.balance + tx.credit
+      : clientRecord.balance - tx.debit;
 
-    await cli.save();
+    await clientRecord.save();
     await tx.deleteOne();
 
     res.json({ message: 'Transacción eliminada' });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error('Error al eliminar transacción:', err);
+    res.status(500).json({ message: 'Error al eliminar transacción' });
   }
 };
 

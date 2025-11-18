@@ -1,7 +1,9 @@
 import axios from "axios";
-const API = process.env.REACT_APP_API_URL + "/clients";
+import { API_URL } from "../config";
 
-export const getClients = () => axios.get(API);
-export const createClient = (data) => axios.post(API, data);
-export const updateClient = (id, data) => axios.put(`${API}/${id}`, data);
-export const deleteClient = (id) => axios.delete(`${API}/${id}`);
+const RESOURCE = `${API_URL}/clients`;
+
+export const getClients = () => axios.get(RESOURCE);
+export const createClient = (data) => axios.post(RESOURCE, data);
+export const updateClient = (id, data) => axios.put(`${RESOURCE}/${id}`, data);
+export const deleteClient = (id) => axios.delete(`${RESOURCE}/${id}`);

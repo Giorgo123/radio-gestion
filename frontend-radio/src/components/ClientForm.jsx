@@ -19,7 +19,7 @@ const ClientForm = ({ onAdd }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name) {
-      alert('Completá nombre y/o agencia');
+      alert('Completá el nombre');
       return;
     }
 

@@ -9,6 +9,7 @@ const DashboardLayout = () => {
     { to: "/clients", label: "Clientes" },
     { to: "/transactions", label: "Transacciones" },
     { to: "/agencies", label: "Agencias" },
+    { to: "/contracts", label: "Publicidades" },
   ];
 
   return (

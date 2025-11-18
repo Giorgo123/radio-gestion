@@ -5,33 +5,40 @@ import { toast } from "react-toastify";
 
 export default function Agencies() {
   const [agencies, setAgencies] = useState([]);
-  const [newAgency, setNewAgency] = useState("");
+  const [agencyName, setAgencyName] = useState("");
 
-  const fetchAgencies = async () => {
+  const loadAgencies = async () => {
     try {
       const res = await axios.get(`${API_URL}/agencies`);
       setAgencies(res.data);
     } catch (err) {
       console.error("Error cargando agencias:", err);
+      const msg = !err.response
+        ? "No se pudo conectar con el backend. Verificá que esté corriendo y la variable REACT_APP_API_URL."
+        : err.response?.data?.message || "No se pudieron cargar las agencias";
+      toast.error(msg);
     }
   };
 
   useEffect(() => {
-    fetchAgencies();
+    loadAgencies();
   }, []);
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    if (!newAgency.trim()) return;
+    if (!agencyName.trim()) {
+      toast.error("Ingresá el nombre de la agencia");
+      return;
+    }
 
     try {
-      await axios.post(`${API_URL}/agencies`, { name: newAgency });
-      setNewAgency("");
-      fetchAgencies();
+      await axios.post(`${API_URL}/agencies`, { name: agencyName });
+      setAgencyName("");
+      loadAgencies();
       toast.success("Agencia agregada");
     } catch (err) {
       console.error("Error al agregar agencia:", err);
-      toast.error("No se pudo agregar la agencia");
+      toast.error(err.response?.data?.message || "No se pudo agregar la agencia");
     }
   };
 
@@ -39,11 +46,11 @@ export default function Agencies() {
     if (!window.confirm("¿Eliminar agencia?")) return;
     try {
       await axios.delete(`${API_URL}/agencies/${id}`);
-      fetchAgencies();
+      loadAgencies();
       toast.success("Agencia eliminada");
     } catch (err) {
       console.error("Error al eliminar agencia:", err);
-      toast.error("No se pudo eliminar la agencia");
+      toast.error(err.response?.data?.message || "No se pudo eliminar la agencia");
     }
   };
 
@@ -55,8 +62,8 @@ export default function Agencies() {
         <input
           type="text"
           placeholder="Nueva agencia"
-          value={newAgency}
-          onChange={(e) => setNewAgency(e.target.value)}
+          value={agencyName}
+          onChange={(e) => setAgencyName(e.target.value)}
           className="flex-1 border p-2 rounded"
         />
         <button

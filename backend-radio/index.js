@@ -1,14 +1,10 @@
 // index.js
-const express = require("express");
-const cors = require("cors");
-const connectDB = require("./config/db");
-require("dotenv").config();
+require('dotenv').config();
 
 const clientRoutes = require("./routes/clientRoutes");
 const agencyRoutes = require("./routes/agencyRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
 
-const app = express();
 const PORT = process.env.PORT || 5000;
 
 /**
@@ -69,6 +65,6 @@ connectDB()
     });
   })
   .catch((err) => {
-    console.error("❌ No se pudo conectar a la DB:", err.message);
+    console.error('❌ No se pudo conectar a la DB:', err.message);
     process.exit(1);
   });

@@ -1,8 +1,10 @@
-import axios from 'axios';
+import axios from "axios";
+import { API_URL } from "../config";
 
-const API = `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/agencies`;
+const RESOURCE = `${API_URL}/agencies`;
 
-export const getAgencies = () => axios.get(API);
-export const createAgency = (data) => axios.post(API, data);
-export const updateAgency = (id, data) => axios.put(`${API}/${id}`, data);
-export const deleteAgency = (id) => axios.delete(`${API}/${id}`);
+export const getAgencies = () => axios.get(RESOURCE);
+export const createAgency = (data) => axios.post(RESOURCE, data);
+export const updateAgency = (id, data) =>
+  axios.put(`${RESOURCE}/${id}`, data);
+export const deleteAgency = (id) => axios.delete(`${RESOURCE}/${id}`);

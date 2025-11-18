@@ -22,6 +22,10 @@ export default function Transactions() {
       setClients(clientsRes.data);
     } catch (err) {
       console.error("Error cargando datos:", err);
+      const msg = !err.response
+        ? "No se pudo conectar con el backend. Verificá que esté corriendo y la variable REACT_APP_API_URL."
+        : err.response?.data?.message || "No se pudieron cargar las transacciones";
+      try { const { toast } = await import("react-toastify"); toast.error(msg); } catch {}
     }
   };
 
