@@ -1,9 +1,12 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
 
 const clientRoutes = require('./routes/clientRoutes');
 const agencyRoutes = require('./routes/agencyRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
+const contractRoutes = require('./routes/contractRoutes');
 
 const buildApp = () => {
   const app = express();
@@ -12,6 +15,13 @@ const buildApp = () => {
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
+
+  // Seguridad básica
+  app.use(helmet());
+  // Logging de requests (más detallado en dev)
+  if (process.env.NODE_ENV !== 'test') {
+    app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+  }
 
   app.use(
     cors({
@@ -34,6 +44,7 @@ const buildApp = () => {
   app.use('/api/clients', clientRoutes);
   app.use('/api/agencies', agencyRoutes);
   app.use('/api/transactions', transactionRoutes);
+  app.use('/api/contracts', contractRoutes);
 
   app.use((req, res) => {
     res.status(404).json({ message: 'Not Found' });
