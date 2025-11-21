@@ -6,7 +6,8 @@ const normalize = (value) => {
   return value.replace(/\/$/, "");
 };
 
-const fallbackUrl = "http://localhost:5000/api";
+// Fallback robusto: ruta relativa. En dev CRA se proxea al backend con package.json "proxy".
+const fallbackUrl = "/api";
 
 function readEnvUrl() {
   // 1) Vite-style (import.meta.env)
