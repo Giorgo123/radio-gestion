@@ -9,41 +9,31 @@ const normalize = (value) => {
 // Fallback robusto: ruta relativa. En dev CRA se proxea al backend con package.json "proxy".
 const fallbackUrl = "/api";
 
-function readEnvUrl() {
-  // 1) Vite-style (import.meta.env)
-  try {
-    // Algunos bundlers no soportan import.meta; por eso el try/catch.
-    if (typeof import.meta !== "undefined" && import.meta.env) {
-      const e = import.meta.env;
-      return (
-        e.VITE_API_URL ||
-        e.NEXT_PUBLIC_API_URL ||
-        e.NX_API_URL ||
-        e.REACT_APP_API_URL ||
-        null
-      );
-    }
-  } catch (_) {
-    // ignorar
-  }
+const envUrl =
+  // CRA y bundlers que reemplazan en build-time
+  process.env.REACT_APP_API_URL ||
+  process.env.REACT_APP_BACKEND_URL ||
+  process.env.NX_API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.VITE_API_URL ||
+  process.env.PUBLIC_API_URL ||
+  // Vite/import.meta en dev/build
+  (typeof import.meta !== "undefined" &&
+    import.meta.env &&
+    (import.meta.env.VITE_API_URL ||
+      import.meta.env.NEXT_PUBLIC_API_URL ||
+      import.meta.env.NX_API_URL ||
+      import.meta.env.REACT_APP_API_URL)) ||
+  // Escape hatch por si inyectan en window
+  (typeof window !== "undefined" && window.__API_URL__) ||
+  null;
 
-  // 2) CRA/Next/Nx vía process.env (reemplazado en build cuando aplica)
-  const env = typeof process !== "undefined" && process && process.env ? process.env : {};
-  return (
-    env.REACT_APP_API_URL ||
-    env.REACT_APP_BACKEND_URL ||
-    env.NX_API_URL ||
-    env.NEXT_PUBLIC_API_URL ||
-    env.VITE_API_URL || // por compatibilidad si quedó configurado
-    env.PUBLIC_API_URL ||
-    null
-  );
-}
-
-const envUrl = readEnvUrl();
 export const API_URL = normalize(envUrl) || fallbackUrl;
 
-const nodeEnv = (typeof process !== "undefined" && process && process.env && process.env.NODE_ENV) || "";
+const nodeEnv =
+  process.env.NODE_ENV ||
+  (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.NODE_ENV) ||
+  "";
 if (nodeEnv !== "production" && !envUrl) {
   // eslint-disable-next-line no-console
   console.warn(`⚠️  API_URL no está definido. Usando valor por defecto: ${fallbackUrl}`);

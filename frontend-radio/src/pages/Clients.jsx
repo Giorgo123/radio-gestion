@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_URL } from "../config";
 import { toast } from "react-toastify";
+import { capitalizeStart } from "../lib/utils";
 
 export default function Clients() {
   const [clients, setClients] = useState([]);
@@ -36,8 +37,10 @@ export default function Clients() {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((f) => ({ ...f, [name]: value }));
+    const { name, value, dataset } = e.target;
+    const nextValue =
+      dataset.capitalize === "true" ? capitalizeStart(value) : value;
+    setFormData((f) => ({ ...f, [name]: nextValue }));
   };
 
   const handleSubmit = async (e) => {
@@ -102,13 +105,14 @@ export default function Clients() {
         <div className="grid grid-cols-2 gap-4">
           <input
             type="text"
-            name="name"
-            placeholder="Nombre"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            className="border p-2 rounded"
-          />
+          name="name"
+          placeholder="Nombre"
+          value={formData.name}
+          onChange={handleChange}
+          required
+          className="border p-2 rounded"
+          data-capitalize="true"
+        />
           <select
             name="agency"
             value={formData.agency || ""}

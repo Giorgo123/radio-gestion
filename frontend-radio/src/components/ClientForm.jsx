@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_URL } from '../config';
+import { capitalizeStart } from '../lib/utils';
 
 
 const ClientForm = ({ onAdd }) => {
@@ -50,7 +51,7 @@ const ClientForm = ({ onAdd }) => {
         <input
           type="text"
           value={name}
-          onChange={e => setName(e.target.value)}
+          onChange={e => setName(capitalizeStart(e.target.value))}
           required
         />
       </label>

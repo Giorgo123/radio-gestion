@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { API_URL } from "../config";
 import { toast } from "react-toastify";
+import { capitalizeStart } from "../lib/utils";
 
 const createInitialState = () => ({
   clientId: "",
@@ -29,7 +30,16 @@ export default function TransactionForm({ onSuccess, clients }) {
       return;
     }
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const capitalizableFields = new Set([
+      "orderNumber",
+      "receiptOrInvoice",
+      "promoter",
+    ]);
+    const nextValue = capitalizableFields.has(name)
+      ? capitalizeStart(value)
+      : value;
+
+    setFormData((prev) => ({ ...prev, [name]: nextValue }));
   };
 
   const handleSubmit = async (event) => {
@@ -157,6 +167,7 @@ export default function TransactionForm({ onSuccess, clients }) {
           value={formData.orderNumber}
           onChange={handleChange}
           className="border p-2 rounded w-full"
+          data-capitalize="true"
         />
       </div>
 
@@ -169,6 +180,7 @@ export default function TransactionForm({ onSuccess, clients }) {
           value={formData.receiptOrInvoice}
           onChange={handleChange}
           className="border p-2 rounded w-full"
+          data-capitalize="true"
         />
       </div>
 
@@ -181,6 +193,7 @@ export default function TransactionForm({ onSuccess, clients }) {
           value={formData.promoter}
           onChange={handleChange}
           className="border p-2 rounded w-full"
+          data-capitalize="true"
         />
       </div>
 

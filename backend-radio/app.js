@@ -15,6 +15,26 @@ const buildApp = () => {
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
+  const localOrigins = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+  ];
+  const effectiveOrigins = [...new Set([...allowedOrigins, ...localOrigins])];
+
+  const corsOptions = {
+    origin: (origin, callback) => {
+      // Siempre permitimos llamadas de herramientas internas (no tienen origin)
+      if (!origin) return callback(null, true);
+      if (effectiveOrigins.includes(origin) || effectiveOrigins.includes('*')) {
+        return callback(null, true);
+      }
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    optionsSuccessStatus: 200,
+  };
 
   // Seguridad básica
   app.use(helmet());
@@ -23,18 +43,7 @@ const buildApp = () => {
     app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
   }
 
-  app.use(
-    cors({
-      origin(origin, callback) {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
-          return callback(null, true);
-        }
-        return callback(new Error('Not allowed by CORS'));
-      },
-      credentials: true,
-    })
-  );
+  app.use(cors(corsOptions));
 
   app.use(express.json());
 

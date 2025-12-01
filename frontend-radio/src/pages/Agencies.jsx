@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_URL } from "../config";
 import { toast } from "react-toastify";
+import { capitalizeStart } from "../lib/utils";
 
 export default function Agencies() {
   const [agencies, setAgencies] = useState([]);
@@ -63,7 +64,7 @@ export default function Agencies() {
           type="text"
           placeholder="Nueva agencia"
           value={agencyName}
-          onChange={(e) => setAgencyName(e.target.value)}
+          onChange={(e) => setAgencyName(capitalizeStart(e.target.value))}
           className="flex-1 border p-2 rounded"
         />
         <button

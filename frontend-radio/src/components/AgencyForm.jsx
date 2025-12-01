@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { API_URL } from "../config";
 import { toast } from "react-toastify";
+import { capitalizeStart } from "../lib/utils";
 
 export default function AgencyForm({ onAdd }) {
   const [name, setName] = useState("");
@@ -37,7 +38,7 @@ export default function AgencyForm({ onAdd }) {
         type="text"
         placeholder="Nombre de la agencia"
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(e) => setName(capitalizeStart(e.target.value))}
         className="flex-1 border p-2 rounded"
       />
       <button
