@@ -15,11 +15,11 @@ import { Button } from "../components/ui/button";
 const initialFormState = {
   advertiser: "",
   program: "",
+  programDetail: "",
   schedule: "",
-  pricePerSlot: "",
-  passesCount: "",
-  startDate: "",
-  endDate: "",
+  pricePerMonth: "",
+  startMonth: "",
+  endMonth: "",
 };
 
 const initialSummaryFilters = {
@@ -34,8 +34,58 @@ const formatCurrency = (value) =>
     minimumFractionDigits: 2,
   }).format(Number(value || 0));
 
-const formatDate = (value) =>
-  value ? new Date(value).toLocaleDateString() : "-";
+const padMonthPart = (value) => String(value).padStart(2, "0");
+
+const toMonthInputValue = (value) => {
+  if (!value) return "";
+  if (typeof value === "string" && value.length >= 7) {
+    return value.substring(0, 7);
+  }
+  const parsedDate = new Date(value);
+  if (Number.isNaN(parsedDate.getTime())) return "";
+  const year = parsedDate.getUTCFullYear();
+  const month = padMonthPart(parsedDate.getUTCMonth() + 1);
+  return `${year}-${month}`;
+};
+
+const getMonthsCount = (startMonth, endMonth) => {
+  if (!startMonth || !endMonth) return 0;
+  const [startYear, startMonthNumber] = startMonth.split("-").map(Number);
+  const [endYear, endMonthNumber] = endMonth.split("-").map(Number);
+  const hasInvalidValue = [startYear, startMonthNumber, endYear, endMonthNumber]
+    .some((value) => Number.isNaN(value));
+  if (hasInvalidValue) return 0;
+  const diff = (endYear - startYear) * 12 + (endMonthNumber - startMonthNumber);
+  return diff >= 0 ? diff + 1 : 0;
+};
+
+const monthValueToStartDate = (monthValue) => {
+  if (!monthValue) return "";
+  const [year, month] = monthValue.split("-").map(Number);
+  if (Number.isNaN(year) || Number.isNaN(month)) return "";
+  return `${year}-${padMonthPart(month)}-01`;
+};
+
+const monthValueToEndDate = (monthValue) => {
+  if (!monthValue) return "";
+  const [year, month] = monthValue.split("-").map(Number);
+  if (Number.isNaN(year) || Number.isNaN(month)) return "";
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return `${year}-${padMonthPart(month)}-${padMonthPart(lastDay)}`;
+};
+
+const formatMonth = (value) => {
+  const monthValue = toMonthInputValue(value);
+  if (!monthValue) return "-";
+  const [year, month] = monthValue.split("-").map(Number);
+  if (Number.isNaN(year) || Number.isNaN(month)) return "-";
+  const monthDate = new Date(Date.UTC(year, month - 1, 1));
+  return new Intl.DateTimeFormat("es-AR", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(monthDate);
+};
 
 export default function Contracts() {
   const [formData, setFormData] = useState(initialFormState);
@@ -106,15 +156,17 @@ export default function Contracts() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
+    const monthsCount = getMonthsCount(formData.startMonth, formData.endMonth);
 
     const payload = {
       advertiser: capitalizeStart(formData.advertiser.trim()),
       program: capitalizeStart(formData.program.trim()),
+      programDetail: capitalizeStart(formData.programDetail.trim()),
       schedule: capitalizeStart(formData.schedule.trim()),
-      pricePerSlot: Number(formData.pricePerSlot),
-      passesCount: Number(formData.passesCount),
-      startDate: formData.startDate,
-      endDate: formData.endDate || null,
+      pricePerSlot: Number(formData.pricePerMonth),
+      passesCount: monthsCount,
+      startDate: monthValueToStartDate(formData.startMonth),
+      endDate: monthValueToEndDate(formData.endMonth),
     };
 
     if (!payload.advertiser || !payload.program || !payload.schedule) {
@@ -123,14 +175,20 @@ export default function Contracts() {
       return;
     }
 
-    if (Number.isNaN(payload.pricePerSlot) || payload.pricePerSlot <= 0) {
-      toast.error("Ingresá un precio válido");
+    if (!formData.startMonth || !formData.endMonth) {
+      toast.error("Seleccioná mes de inicio y mes de fin");
       setLoading(false);
       return;
     }
 
-    if (Number.isNaN(payload.passesCount) || payload.passesCount <= 0) {
-      toast.error("Ingresá la cantidad de pases");
+    if (monthsCount <= 0) {
+      toast.error("El mes de fin no puede ser anterior al mes de inicio");
+      setLoading(false);
+      return;
+    }
+
+    if (Number.isNaN(payload.pricePerSlot) || payload.pricePerSlot <= 0) {
+      toast.error("Ingresá un precio válido");
       setLoading(false);
       return;
     }
@@ -159,11 +217,11 @@ export default function Contracts() {
     setFormData({
       advertiser: capitalizeStart(contract.advertiser || ""),
       program: capitalizeStart(contract.program || ""),
+      programDetail: capitalizeStart(contract.programDetail || ""),
       schedule: capitalizeStart(contract.schedule || ""),
-      pricePerSlot: contract.pricePerSlot ?? "",
-      passesCount: contract.passesCount ?? "",
-      startDate: contract.startDate ? contract.startDate.substring(0, 10) : "",
-      endDate: contract.endDate ? contract.endDate.substring(0, 10) : "",
+      pricePerMonth: contract.pricePerSlot ?? "",
+      startMonth: toMonthInputValue(contract.startDate),
+      endMonth: toMonthInputValue(contract.endDate || contract.startDate),
     });
     if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -220,7 +278,8 @@ export default function Contracts() {
   );
 
   const draftTotal =
-    Number(formData.pricePerSlot || 0) * Number(formData.passesCount || 0);
+    Number(formData.pricePerMonth || 0) *
+    getMonthsCount(formData.startMonth, formData.endMonth);
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen space-y-8">
@@ -312,78 +371,76 @@ export default function Contracts() {
                 required
               />
             </div>
+
+            <div className="flex flex-col md:col-span-3">
+              <label className="font-medium" htmlFor="programDetail">
+                Detalle de programa
+              </label>
+              <textarea
+                id="programDetail"
+                name="programDetail"
+                rows={2}
+                className="border rounded px-3 py-2"
+                value={formData.programDetail}
+                onChange={handleChange}
+                placeholder="Ej. Spot de 20 segundos + mención en apertura"
+                data-capitalize="true"
+              />
+            </div>
           </div>
 
           <div className="bg-gray-50 border border-gray-200 rounded p-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-semibold text-gray-700">
-                Plan de pases y valores
-              </p>
+              <p className="text-sm font-semibold text-gray-700">Plan y valores</p>
               <span className="text-xs text-gray-500">
                 Replicá el cuadro del comprobante
               </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex flex-col">
-                <label className="font-medium" htmlFor="pricePerSlot">
-                  Precio por tanda ($)
+                <label className="font-medium" htmlFor="pricePerMonth">
+                  Precio por mes ($)
                 </label>
                 <input
-                  id="pricePerSlot"
-                  name="pricePerSlot"
+                  id="pricePerMonth"
+                  name="pricePerMonth"
                   type="number"
                   min="0"
                   step="0.01"
                   className="border rounded px-3 py-2"
-                  value={formData.pricePerSlot}
+                  value={formData.pricePerMonth}
                   onChange={handleChange}
                   required
                 />
               </div>
 
               <div className="flex flex-col">
-                <label className="font-medium" htmlFor="passesCount">
-                  Cantidad de pases
+                <label className="font-medium" htmlFor="startMonth">
+                  Mes de inicio
                 </label>
                 <input
-                  id="passesCount"
-                  name="passesCount"
-                  type="number"
-                  min="1"
-                  step="1"
+                  id="startMonth"
+                  name="startMonth"
+                  type="month"
                   className="border rounded px-3 py-2"
-                  value={formData.passesCount}
+                  value={formData.startMonth}
                   onChange={handleChange}
                   required
                 />
               </div>
 
               <div className="flex flex-col">
-                <label className="font-medium" htmlFor="startDate">
-                  Fecha de inicio
+                <label className="font-medium" htmlFor="endMonth">
+                  Mes de fin
                 </label>
                 <input
-                  id="startDate"
-                  name="startDate"
-                  type="date"
+                  id="endMonth"
+                  name="endMonth"
+                  type="month"
                   className="border rounded px-3 py-2"
-                  value={formData.startDate}
+                  value={formData.endMonth}
                   onChange={handleChange}
                   required
-                />
-              </div>
-
-              <div className="flex flex-col">
-                <label className="font-medium" htmlFor="endDate">
-                  Fecha de fin (opcional)
-                </label>
-                <input
-                  id="endDate"
-                  name="endDate"
-                  type="date"
-                  className="border rounded px-3 py-2"
-                  value={formData.endDate}
-                  onChange={handleChange}
                 />
               </div>
             </div>
@@ -392,7 +449,7 @@ export default function Contracts() {
                 Total estimado: {formatCurrency(draftTotal || 0)}
               </span>
               <span className="text-gray-500">
-                (precio x cantidad de pases)
+                (precio mensual x {getMonthsCount(formData.startMonth, formData.endMonth)} meses)
               </span>
             </div>
           </div>
@@ -436,19 +493,20 @@ export default function Contracts() {
               <tr className="text-left bg-gray-100">
                 <th className="px-4 py-2">Cliente / Agencia</th>
                 <th className="px-4 py-2">Programa</th>
+                <th className="px-4 py-2">Detalle de programa</th>
                 <th className="px-4 py-2">Horario</th>
-                <th className="px-4 py-2">Precio</th>
-                <th className="px-4 py-2">Pases</th>
+                <th className="px-4 py-2">Precio mensual</th>
+                <th className="px-4 py-2">Meses</th>
                 <th className="px-4 py-2">Total</th>
-                <th className="px-4 py-2">Inicio</th>
-                <th className="px-4 py-2">Fin</th>
+                <th className="px-4 py-2">Mes inicio</th>
+                <th className="px-4 py-2">Mes fin</th>
                 <th className="px-4 py-2 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {contracts.length === 0 && (
                 <tr>
-                  <td className="px-4 py-3 text-center" colSpan={9}>
+                  <td className="px-4 py-3 text-center" colSpan={10}>
                     No hay publicidades cargadas todavía.
                   </td>
                 </tr>
@@ -459,6 +517,9 @@ export default function Contracts() {
                     {contract.advertiser}
                   </td>
                   <td className="px-4 py-3 text-gray-600">{contract.program}</td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {contract.programDetail || "-"}
+                  </td>
                   <td className="px-4 py-3 text-gray-600">{contract.schedule}</td>
                   <td className="px-4 py-3 text-gray-600">
                     {formatCurrency(contract.pricePerSlot)}
@@ -468,10 +529,10 @@ export default function Contracts() {
                     {formatCurrency(contract.total)}
                   </td>
                   <td className="px-4 py-3 text-gray-600">
-                    {formatDate(contract.startDate)}
+                    {formatMonth(contract.startDate)}
                   </td>
                   <td className="px-4 py-3 text-gray-600">
-                    {formatDate(contract.endDate)}
+                    {formatMonth(contract.endDate || contract.startDate)}
                   </td>
                   <td className="px-4 py-3 text-right space-x-2">
                     <Button

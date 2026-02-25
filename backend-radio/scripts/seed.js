@@ -42,14 +42,16 @@ async function seed() {
     if (contractCount === 0) {
       console.log('➕ Insertando contratos demo...');
       const today = new Date();
+      const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const endOfThirdMonth = new Date(today.getFullYear(), today.getMonth() + 3, 0);
       await Contract.create({
         advertiser: 'Acme Corp',
         program: 'Mañanas en Vivo',
+        programDetail: 'Spots de 20 segundos con mención en apertura.',
         schedule: 'Lun a Vie 10:00 - 12:00',
         pricePerSlot: 5000,
-        passesCount: 20,
-        startDate: today,
-        endDate: null,
+        startDate: startOfCurrentMonth,
+        endDate: endOfThirdMonth,
       });
     }
 
@@ -93,4 +95,3 @@ async function seed() {
 }
 
 seed();
-

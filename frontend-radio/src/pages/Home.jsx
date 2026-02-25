@@ -39,7 +39,7 @@ export default function Home() {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-2xl font-bold mb-6 text-blue-600">Dashboard</h2>
+      <h2 className="text-2xl font-bold mb-6 text-blue-600">Panel de Inicio</h2>
 
       <div className="grid gap-6 md:grid-cols-3">
         {/* Clientes */}
