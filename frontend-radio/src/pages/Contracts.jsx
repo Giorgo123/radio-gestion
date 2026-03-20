@@ -178,7 +178,7 @@ export default function Contracts() {
     }
 
     if (!formData.startDate || !formData.endDate) {
-      toast.error("Seleccioná mes de inicio y mes de fin");
+      toast.error("Seleccioná fecha de inicio y fecha de fin");
       setLoading(false);
       return;
     }
@@ -452,7 +452,7 @@ export default function Contracts() {
                 Total estimado: {formatCurrency(draftTotal || 0)}
               </span>
               <span className="text-gray-500">
-                (precio mensual x {getMonthsCount(formData.startMonth, formData.endMonth)} meses)
+                (precio mensual x {getMonthsCount(formData.startDate, formData.endDate)} meses)
               </span>
             </div>
           </div>
