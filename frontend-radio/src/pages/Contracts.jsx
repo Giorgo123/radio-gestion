@@ -18,8 +18,8 @@ const initialFormState = {
   programDetail: "",
   schedule: "",
   pricePerMonth: "",
-  startMonth: "",
-  endMonth: "",
+  startDate: "",
+  endDate: "",
 };
 
 const initialSummaryFilters = {
@@ -48,14 +48,16 @@ const toMonthInputValue = (value) => {
   return `${year}-${month}`;
 };
 
-const getMonthsCount = (startMonth, endMonth) => {
-  if (!startMonth || !endMonth) return 0;
-  const [startYear, startMonthNumber] = startMonth.split("-").map(Number);
-  const [endYear, endMonthNumber] = endMonth.split("-").map(Number);
-  const hasInvalidValue = [startYear, startMonthNumber, endYear, endMonthNumber]
-    .some((value) => Number.isNaN(value));
-  if (hasInvalidValue) return 0;
-  const diff = (endYear - startYear) * 12 + (endMonthNumber - startMonthNumber);
+const getMonthsCount = (startDate, endDate) => {
+  if (!startDate || !endDate) return 0;
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  const diff =
+    (end.getFullYear() - start.getFullYear()) * 12 +
+    (end.getMonth() - start.getMonth());
+
   return diff >= 0 ? diff + 1 : 0;
 };
 
@@ -156,7 +158,7 @@ export default function Contracts() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
-    const monthsCount = getMonthsCount(formData.startMonth, formData.endMonth);
+    const monthsCount = getMonthsCount(formData.startDate, formData.endDate);
 
     const payload = {
       advertiser: capitalizeStart(formData.advertiser.trim()),
@@ -165,8 +167,8 @@ export default function Contracts() {
       schedule: capitalizeStart(formData.schedule.trim()),
       pricePerSlot: Number(formData.pricePerMonth),
       passesCount: monthsCount,
-      startDate: monthValueToStartDate(formData.startMonth),
-      endDate: monthValueToEndDate(formData.endMonth),
+      startDate: formData.startDate,
+      endDate: formData.endDate,
     };
 
     if (!payload.advertiser || !payload.program || !payload.schedule) {
@@ -175,7 +177,7 @@ export default function Contracts() {
       return;
     }
 
-    if (!formData.startMonth || !formData.endMonth) {
+    if (!formData.startDate || !formData.endDate) {
       toast.error("Seleccioná mes de inicio y mes de fin");
       setLoading(false);
       return;
@@ -220,8 +222,8 @@ export default function Contracts() {
       programDetail: capitalizeStart(contract.programDetail || ""),
       schedule: capitalizeStart(contract.schedule || ""),
       pricePerMonth: contract.pricePerSlot ?? "",
-      startMonth: toMonthInputValue(contract.startDate),
-      endMonth: toMonthInputValue(contract.endDate || contract.startDate),
+      startDate: contract.startDate?.substring(0, 10),
+      endDate: contract.endDate?.substring(0, 10),
     });
     if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -279,7 +281,7 @@ export default function Contracts() {
 
   const draftTotal =
     Number(formData.pricePerMonth || 0) *
-    getMonthsCount(formData.startMonth, formData.endMonth);
+    getMonthsCount(formData.startDate, formData.endDate)
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen space-y-8">
@@ -414,35 +416,36 @@ export default function Contracts() {
                 />
               </div>
 
-              <div className="flex flex-col">
-                <label className="font-medium" htmlFor="startMonth">
-                  Mes de inicio
-                </label>
-                <input
-                  id="startMonth"
-                  name="startMonth"
-                  type="month"
-                  className="border rounded px-3 py-2"
-                  value={formData.startMonth}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+            <div className="flex flex-col">
+              <label className="font-medium" htmlFor="startDate">
+                Fecha de inicio
+              </label>
+              <input
+                id="startDate"
+                name="startDate"
+                type="date"
+                className="border rounded px-3 py-2"
+                value={formData.startDate}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-              <div className="flex flex-col">
-                <label className="font-medium" htmlFor="endMonth">
-                  Mes de fin
-                </label>
-                <input
-                  id="endMonth"
-                  name="endMonth"
-                  type="month"
-                  className="border rounded px-3 py-2"
-                  value={formData.endMonth}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+            <div className="flex flex-col">
+              <label className="font-medium" htmlFor="endDate">
+                Fecha de fin
+              </label>
+              <input
+                id="endDate"
+                name="endDate"
+                type="date"
+                className="border rounded px-3 py-2"
+                value={formData.endDate}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            
             </div>
             <div className="mt-3 text-sm text-gray-700 flex flex-wrap items-center gap-2">
               <span className="font-semibold text-blue-700">

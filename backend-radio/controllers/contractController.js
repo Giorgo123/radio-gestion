@@ -28,12 +28,14 @@ const createContract = async (req, res) => {
 const updateContract = async (req, res) => {
   try {
     const contract = await Contract.findById(req.params.id);
+
     if (!contract) {
       return res.status(404).json({ message: 'Contrato no encontrado' });
     }
 
     contract.set(req.body);
     contract.recalculateTotal();
+
     await contract.save();
 
     res.json(contract);
@@ -45,9 +47,11 @@ const updateContract = async (req, res) => {
 const deleteContract = async (req, res) => {
   try {
     const deleted = await Contract.findByIdAndDelete(req.params.id);
+
     if (!deleted) {
       return res.status(404).json({ message: 'Contrato no encontrado' });
     }
+
     res.json({ message: 'Contrato eliminado correctamente' });
   } catch (error) {
     res.status(500).json({ message: 'Error al eliminar contrato', error });
@@ -57,6 +61,7 @@ const deleteContract = async (req, res) => {
 const getContractsSummary = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
+
     const rangeStart = parseDate(startDate, new Date('1970-01-01'));
     const rangeEnd = parseDate(endDate, new Date('2999-12-31'));
 
@@ -66,20 +71,25 @@ const getContractsSummary = async (req, res) => {
       .filter((contract) => {
         const start = contract.startDate;
         const end = contract.endDate || contract.startDate;
+
         if (!start) return false;
+
         return start <= rangeEnd && end >= rangeStart;
       })
       .reduce((sum, contract) => sum + (contract.total || 0), 0);
 
     const today = new Date();
+
     const activeAdvertisers = [
       ...new Set(
         contracts
           .filter((contract) => {
             if (!contract.startDate) return false;
+
             if (contract.endDate) {
               return contract.endDate >= today;
             }
+
             return contract.startDate <= today;
           })
           .map((contract) => contract.advertiser)

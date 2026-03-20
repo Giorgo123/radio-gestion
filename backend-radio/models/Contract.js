@@ -10,7 +10,7 @@ const contractSchema = new mongoose.Schema(
     passesCount: { type: Number, required: true, min: 0 },
     total: { type: Number, required: true, min: 0 },
     startDate: { type: Date, required: true },
-    endDate: { type: Date },
+    endDate: { type: Date }
   },
   { timestamps: true }
 );
@@ -22,38 +22,35 @@ const toValidDate = (value) => {
 };
 
 const getMonthDiffInclusive = (startDate, endDate) => {
-  const startYear = startDate.getUTCFullYear();
-  const startMonth = startDate.getUTCMonth();
-  const endYear = endDate.getUTCFullYear();
-  const endMonth = endDate.getUTCMonth();
+  const startYear = startDate.getFullYear();
+  const startMonth = startDate.getMonth();
+
+  const endYear = endDate.getFullYear();
+  const endMonth = endDate.getMonth();
+
   return (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
 };
 
-function normalizeMonthlyRange(doc) {
+function normalizeDateRange(doc) {
   const startDate = toValidDate(doc.startDate);
-  const rawEndDate = toValidDate(doc.endDate) || startDate;
+  const endDate = toValidDate(doc.endDate) || startDate;
 
-  if (!startDate || !rawEndDate) return;
+  if (!startDate || !endDate) return;
 
-  const normalizedStart = new Date(
-    Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), 1, 0, 0, 0, 0)
-  );
-  const normalizedEnd = new Date(
-    Date.UTC(rawEndDate.getUTCFullYear(), rawEndDate.getUTCMonth() + 1, 0, 23, 59, 59, 999)
-  );
-
-  if (normalizedEnd < normalizedStart) {
-    doc.invalidate('endDate', 'El mes de fin no puede ser anterior al mes de inicio');
+  if (endDate < startDate) {
+    doc.invalidate('endDate', 'La fecha de fin no puede ser anterior a la fecha de inicio');
     return;
   }
 
-  doc.startDate = normalizedStart;
-  doc.endDate = normalizedEnd;
-  doc.passesCount = getMonthDiffInclusive(normalizedStart, normalizedEnd);
+  doc.startDate = startDate;
+  doc.endDate = endDate;
+
+  doc.passesCount = getMonthDiffInclusive(startDate, endDate);
 }
 
 function calculateTotal(doc) {
-  normalizeMonthlyRange(doc);
+  normalizeDateRange(doc);
+
   if (doc.pricePerSlot != null && doc.passesCount != null) {
     doc.total = Number(doc.pricePerSlot) * Number(doc.passesCount);
   }
