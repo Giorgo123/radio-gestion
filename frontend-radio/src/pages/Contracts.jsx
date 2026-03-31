@@ -12,6 +12,7 @@ import { getAgencies } from "../api/agency";
 import { capitalizeStart } from "../lib/utils";
 import { Button } from "../components/ui/button";
 
+
 const initialFormState = {
   advertiser: "",
   program: "",
@@ -59,21 +60,6 @@ const getMonthsCount = (startDate, endDate) => {
     (end.getMonth() - start.getMonth());
 
   return diff >= 0 ? diff + 1 : 0;
-};
-
-const monthValueToStartDate = (monthValue) => {
-  if (!monthValue) return "";
-  const [year, month] = monthValue.split("-").map(Number);
-  if (Number.isNaN(year) || Number.isNaN(month)) return "";
-  return `${year}-${padMonthPart(month)}-01`;
-};
-
-const monthValueToEndDate = (monthValue) => {
-  if (!monthValue) return "";
-  const [year, month] = monthValue.split("-").map(Number);
-  if (Number.isNaN(year) || Number.isNaN(month)) return "";
-  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
-  return `${year}-${padMonthPart(month)}-${padMonthPart(lastDay)}`;
 };
 
 const formatMonth = (value) => {
@@ -222,8 +208,8 @@ export default function Contracts() {
       programDetail: capitalizeStart(contract.programDetail || ""),
       schedule: capitalizeStart(contract.schedule || ""),
       pricePerMonth: contract.pricePerSlot ?? "",
-      startDate: contract.startDate?.substring(0, 10),
-      endDate: contract.endDate?.substring(0, 10),
+      startDate: contract.startDate ? new Date(contract.startDate).toISOString().slice(0,10) : "",
+      endDate: contract.endDate ? new Date(contract.endDate).toISOString().slice(0,10) : "",
     });
     if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
       window.scrollTo({ top: 0, behavior: "smooth" });

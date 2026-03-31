@@ -5,6 +5,7 @@ import TransactionForm from "../components/TransactionForm";
 import HistorialTransacciones from "../components/HistorialTransacciones";
 import ReportesTransacciones from "../components/ReportesTransacciones";
 import { Button } from "../components/ui/button";
+import { normalizeDateToString } from "../lib/dateUtils"; // solo lo que necesitamos
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
@@ -18,7 +19,15 @@ export default function Transactions() {
         axios.get(`${API_URL}/transactions`),
         axios.get(`${API_URL}/clients`),
       ]);
-      setTransactions(txRes.data);
+
+      // Normalizamos todas las fechas como YYYY-MM-DD
+      const normalizedTxs = txRes.data.map(tx => ({
+        ...tx,
+        date: normalizeDateToString(tx.date),
+        dueDate: normalizeDateToString(tx.dueDate)
+      }));
+
+      setTransactions(normalizedTxs);
       setClients(clientsRes.data);
     } catch (err) {
       console.error("Error cargando datos:", err);
