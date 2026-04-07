@@ -3,7 +3,7 @@ import axios from "axios";
 import { API_URL } from "../config";
 import { toast } from "react-toastify";
 import TransactionForm from "./TransactionForm";
-import { normalizeDateToString, formatDateLocal, formatDateForInput, compareDateStrings } from "../lib/dateUtils";
+import { normalizeDateToString, formatDateLocal, compareDateStrings } from "../lib/dateUtils";
 
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
